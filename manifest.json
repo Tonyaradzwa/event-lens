@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "Event Lens",
+  "version": "1.0.0",
+  "description": "Extract calendar events from emails using Claude AI",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://mail.google.com/*",
+    "https://outlook.live.com/*",
+    "https://outlook.office.com/*",
+    "https://outlook.cloud.microsoft/*",
+    "https://api.anthropic.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Event Lens"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://mail.google.com/*",
+        "https://outlook.live.com/*",
+        "https://outlook.office.com/*",
+        "https://outlook.cloud.microsoft/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
