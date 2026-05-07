@@ -119,7 +119,23 @@ export default function App() {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       if (!tab?.id) throw new Error('No active tab found.');
 
-      const emailRes = await sendToTab(tab.id, { action: 'getEmailText' });
+      // Inject content script if tab was open before the extension loaded
+      let emailRes;
+      try {
+        emailRes = await sendToTab(tab.id, { action: 'getEmailText' });
+      } catch (connErr) {
+        if (connErr.message.includes('Receiving end does not exist') ||
+            connErr.message.includes('Could not establish connection')) {
+          await chrome.scripting.executeScript({
+            target: { tabId: tab.id },
+            files: ['content.js'],
+          });
+          emailRes = await sendToTab(tab.id, { action: 'getEmailText' });
+        } else {
+          throw connErr;
+        }
+      }
+
       if (!emailRes?.text?.trim()) {
         throw new Error('No email content found. Open an email and try again.');
       }
