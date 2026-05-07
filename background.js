@@ -22,7 +22,14 @@ async function extractEventFromText(text, apiKey) {
       messages: [
         {
           role: 'user',
-          content: `Extract ALL calendar events from this email. Return ONLY a valid JSON array — even if there is just one event. Each element must have exactly these fields:
+          content: `Extract ALL actionable calendar entries from this email and return them as a JSON array. Include:
+- Meetings, calls, or events with a specific date/time
+- Deadlines, expiry dates, or "action required by" dates (e.g. "sign by May 17" → a reminder event on that date)
+- Any other date that the recipient should have on their calendar
+
+If there is truly nothing date-related in the email, return an empty array [].
+
+Each element must have exactly these fields:
 {
   "title": "string",
   "date": "YYYY-MM-DD",
@@ -33,7 +40,7 @@ async function extractEventFromText(text, apiKey) {
   "meeting_url": "string or null",
   "description": "string or null"
 }
-Rules: if end_time is missing, set it to 1 hour after start_time. If timezone is missing, use America/Los_Angeles. No prose, no markdown, JSON array only.
+Rules: if end_time is missing, set it to 1 hour after start_time. If timezone is missing, use America/Los_Angeles. For deadline-style events with no time, use 09:00 as start_time. No prose, no markdown, JSON array only.
 
 Email:
 ${text}`,

@@ -89,7 +89,7 @@ function sendToBackground(msg) {
 // ── App ──────────────────────────────────────────────────────────────────────
 
 export default function App() {
-  const [view, setView] = useState('boot'); // boot | settings | loading | picker | main | error
+  const [view, setView] = useState('boot'); // boot | settings | loading | picker | main | empty | error
   const [apiKey, setApiKey] = useState('');
   const [keyInput, setKeyInput] = useState('');
   const [statusMsg, setStatusMsg] = useState('Reading email…');
@@ -103,6 +103,9 @@ export default function App() {
   // Extracted calendar events
   const [events, setEvents] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
+
+  // Manual description fallback (when no events found)
+  const [manualDesc, setManualDesc] = useState('');
 
   // Alert selection for current event
   const [alerts, setAlerts] = useState([60]);
@@ -176,6 +179,10 @@ export default function App() {
       const evts = bgRes.data;
       const otherType = types.find(t => t.permanent);
 
+      if (evts.length === 0) {
+        setView('empty');
+        return;
+      }
       setEvents(evts);
       setSelectedIndex(0);
       setSelectedTypeId(otherType?.id ?? null);
@@ -194,6 +201,30 @@ export default function App() {
     setSelectedTypeId(type.id);
     setAlerts(type.alerts);
     setShowMore(false);
+  }
+
+  // ── Manual description fallback ──────────────────────────────────────────
+
+  async function runFromDescription() {
+    if (!manualDesc.trim()) return;
+    setView('loading');
+    setStatusMsg('Analysing with Claude…');
+    try {
+      const bgRes = await sendToBackground({ action: 'extractEvent', text: manualDesc, apiKey });
+      if (!bgRes.success) throw new Error(bgRes.error);
+      const evts = bgRes.data;
+      const otherType = allTypes.find(t => t.permanent);
+      if (evts.length === 0) { setView('empty'); return; }
+      setEvents(evts);
+      setSelectedIndex(0);
+      setSelectedTypeId(otherType?.id ?? null);
+      setAlerts(otherType?.alerts ?? [60]);
+      setShowMore(false);
+      setView(evts.length > 1 ? 'picker' : 'main');
+    } catch (err) {
+      setErrorMsg(err.message);
+      setView('error');
+    }
   }
 
   // ── Event picking (multi-event) ──────────────────────────────────────────
@@ -332,6 +363,35 @@ export default function App() {
               <span className="event-card-arrow">›</span>
             </button>
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (view === 'empty') {
+    return (
+      <div className="container">
+        <Header onSettings={() => setView('settings')} />
+        <div className="empty-body">
+          <p className="empty-icon">📅</p>
+          <p className="empty-title">No event found</p>
+          <p className="empty-hint">Briefly describe what you want to add to your calendar:</p>
+          <textarea
+            className="empty-desc"
+            placeholder="e.g. Team lunch next Friday at noon"
+            value={manualDesc}
+            onChange={e => setManualDesc(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), runFromDescription())}
+            autoFocus
+            rows={3}
+          />
+          <button
+            className="btn-primary"
+            onClick={runFromDescription}
+            disabled={!manualDesc.trim()}
+          >
+            Create Event
+          </button>
         </div>
       </div>
     );
