@@ -49,7 +49,33 @@ ${text}`,
 
   const payload = await response.json();
   const raw = payload.content[0].text;
-  const match = raw.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error('Claude returned an unexpected format.');
-  return JSON.parse(match[0]);
+  const extracted = extractFirstJSON(raw);
+  if (!extracted) throw new Error('Claude returned an unexpected format.');
+  return JSON.parse(extracted);
+}
+
+// Walk the string to find the first balanced { ... } block, correctly
+// handling strings and escape sequences so that } inside a value doesn't
+// prematurely end the match (the old greedy regex broke on those cases).
+function extractFirstJSON(text) {
+  const start = text.indexOf('{');
+  if (start === -1) return null;
+
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i];
+    if (escaped) { escaped = false; continue; }
+    if (ch === '\\' && inString) { escaped = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (ch === '{') depth++;
+    if (ch === '}') {
+      depth--;
+      if (depth === 0) return text.slice(start, i + 1);
+    }
+  }
+  return null;
 }
