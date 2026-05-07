@@ -19,7 +19,7 @@ Supported email clients: Gmail, Outlook (live.com, office.com, cloud.microsoft).
 **1. Get the code**
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/Tonyaradzwa/event-lens.git
 cd event-lens
 ```
 
