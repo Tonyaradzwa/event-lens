@@ -247,21 +247,20 @@ export default function App() {
   const otherType = allTypes.find(t => t.permanent);
   const nonOther = allTypes.filter(t => !t.permanent);
 
-  let visibleTypes, moreTypes;
-  if (allTypes.length <= 3) {
-    visibleTypes = allTypes;
-    moreTypes = [];
-  } else {
-    // Valid recent = existing non-other types, up to 3
-    const validRecentIds = recentIds.filter(id => nonOther.some(t => t.id === id));
-    const recentTypes = validRecentIds
-      .slice(0, 3)
-      .map(id => allTypes.find(t => t.id === id))
-      .filter(Boolean);
-    const recentIdSet = new Set(recentTypes.map(t => t.id));
-    moreTypes = nonOther.filter(t => !recentIdSet.has(t.id));
-    visibleTypes = [...recentTypes, ...(otherType ? [otherType] : [])];
-  }
+  // Visible = up to 3 non-Other types (recent first, then fill with others) + Other always.
+  // "More" appears only when types remain beyond those 3.
+  const validRecentIds = recentIds.filter(id => nonOther.some(t => t.id === id));
+  const recentTypes = validRecentIds
+    .slice(0, 3)
+    .map(id => allTypes.find(t => t.id === id))
+    .filter(Boolean);
+  const recentIdSet = new Set(recentTypes.map(t => t.id));
+  const nonRecentNonOther = nonOther.filter(t => !recentIdSet.has(t.id));
+  // Fill remaining slots (up to 3 total) with non-recent types
+  const visibleNonOther = [...recentTypes, ...nonRecentNonOther].slice(0, 3);
+  const visibleIdSet = new Set(visibleNonOther.map(t => t.id));
+  const moreTypes = nonOther.filter(t => !visibleIdSet.has(t.id));
+  const visibleTypes = [...visibleNonOther, ...(otherType ? [otherType] : [])];
 
   // Alert chips: standard set + any type-specific alerts not already in standard
   const standardMinuteSet = new Set(STANDARD_ALERTS.map(o => o.minutes));
