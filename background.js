@@ -22,7 +22,7 @@ async function extractEventFromText(text, apiKey) {
       messages: [
         {
           role: 'user',
-          content: `Extract calendar event details from this email. Return ONLY valid JSON with exactly these fields:
+          content: `Extract ALL calendar events from this email. Return ONLY a valid JSON array — even if there is just one event. Each element must have exactly these fields:
 {
   "title": "string",
   "date": "YYYY-MM-DD",
@@ -33,7 +33,7 @@ async function extractEventFromText(text, apiKey) {
   "meeting_url": "string or null",
   "description": "string or null"
 }
-Rules: if end_time is missing, set it to 1 hour after start_time. If timezone is missing, use America/Los_Angeles. No prose, no markdown, JSON only.
+Rules: if end_time is missing, set it to 1 hour after start_time. If timezone is missing, use America/Los_Angeles. No prose, no markdown, JSON array only.
 
 Email:
 ${text}`,
@@ -51,15 +51,24 @@ ${text}`,
   const raw = payload.content[0].text;
   const extracted = extractFirstJSON(raw);
   if (!extracted) throw new Error('Claude returned an unexpected format.');
-  return JSON.parse(extracted);
+  const parsed = JSON.parse(extracted);
+  // Normalise: single object → wrap in array
+  return Array.isArray(parsed) ? parsed : [parsed];
 }
 
-// Walk the string to find the first balanced { ... } block, correctly
-// handling strings and escape sequences so that } inside a value doesn't
-// prematurely end the match (the old greedy regex broke on those cases).
+// Walk the string to find the first balanced JSON value (array or object),
+// correctly handling strings and escape sequences.
 function extractFirstJSON(text) {
-  const start = text.indexOf('{');
-  if (start === -1) return null;
+  const arrIdx = text.indexOf('[');
+  const objIdx = text.indexOf('{');
+  if (arrIdx === -1 && objIdx === -1) return null;
+
+  let start, open, close;
+  if (arrIdx === -1 || (objIdx !== -1 && objIdx < arrIdx)) {
+    start = objIdx; open = '{'; close = '}';
+  } else {
+    start = arrIdx; open = '['; close = ']';
+  }
 
   let depth = 0;
   let inString = false;
@@ -71,8 +80,8 @@ function extractFirstJSON(text) {
     if (ch === '\\' && inString) { escaped = true; continue; }
     if (ch === '"') { inString = !inString; continue; }
     if (inString) continue;
-    if (ch === '{') depth++;
-    if (ch === '}') {
+    if (ch === open) depth++;
+    if (ch === close) {
       depth--;
       if (depth === 0) return text.slice(start, i + 1);
     }

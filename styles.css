@@ -143,6 +143,96 @@ body {
   max-width: 260px;
 }
 
+/* ── Picker ─────────────────────────────────────────────────── */
+
+.picker-header {
+  padding: 10px 14px 6px;
+  border-bottom: 1px solid #eee;
+}
+
+.picker-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.picker-list {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 10px 10px;
+  gap: 5px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.event-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 10px;
+  background: #fafafa;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.event-card:hover {
+  background: #eeeeff;
+  border-color: #c0c1f8;
+}
+
+.event-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.event-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.event-card-meta {
+  font-size: 11px;
+  color: #888;
+  margin-top: 2px;
+}
+
+.event-card-arrow {
+  font-size: 18px;
+  color: #bbb;
+  flex-shrink: 0;
+}
+
+/* ── Back button ─────────────────────────────────────────────── */
+
+.back-btn {
+  display: block;
+  width: 100%;
+  padding: 7px 14px;
+  background: #f3f4f6;
+  border: none;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+  font-size: 12px;
+  font-family: inherit;
+  color: #5b5ef4;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.back-btn:hover {
+  background: #eeeeff;
+}
+
 /* ── Fields ─────────────────────────────────────────────────── */
 
 .fields {

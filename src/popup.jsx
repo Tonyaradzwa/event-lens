@@ -92,11 +92,12 @@ function escape(str) {
 // ── App ─────────────────────────────────────────────────────────────────────
 
 export default function App() {
-  const [view, setView] = useState('boot'); // boot | settings | loading | main | error
+  const [view, setView] = useState('boot'); // boot | settings | loading | picker | main | error
   const [apiKey, setApiKey] = useState('');
   const [keyInput, setKeyInput] = useState('');
   const [statusMsg, setStatusMsg] = useState('Reading email…');
-  const [eventData, setEventData] = useState(null);
+  const [events, setEvents] = useState([]);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const [eventType, setEventType] = useState('Other');
   const [alerts, setAlerts] = useState(TYPE_ALERT_DEFAULTS['Other']);
   const [errorMsg, setErrorMsg] = useState('');
@@ -150,10 +151,12 @@ export default function App() {
 
       if (!bgRes.success) throw new Error(bgRes.error);
 
-      setEventData(bgRes.data);
+      const evts = bgRes.data; // always an array
+      setEvents(evts);
+      setSelectedIndex(0);
       setEventType('Other');
       setAlerts(TYPE_ALERT_DEFAULTS['Other']);
-      setView('main');
+      setView(evts.length > 1 ? 'picker' : 'main');
     } catch (err) {
       setErrorMsg(err.message);
       setView('error');
@@ -189,8 +192,15 @@ export default function App() {
     );
   }
 
+  function pickEvent(index) {
+    setSelectedIndex(index);
+    setEventType('Other');
+    setAlerts(TYPE_ALERT_DEFAULTS['Other']);
+    setView('main');
+  }
+
   function addToCalendar() {
-    const ics = buildICS(eventData, alerts);
+    const ics = buildICS(events[selectedIndex], alerts);
     const uri = `data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`;
     chrome.tabs.create({ url: uri });
   }
@@ -249,6 +259,31 @@ export default function App() {
     );
   }
 
+  if (view === 'picker') {
+    return (
+      <div className="container">
+        <Header onSettings={() => setView('settings')} />
+        <div className="picker-header">
+          <span className="picker-count">{events.length} events found — pick one</span>
+        </div>
+        <div className="picker-list">
+          {events.map((ev, i) => (
+            <button key={i} className="event-card" onClick={() => pickEvent(i)}>
+              <div className="event-card-info">
+                <div className="event-card-title">{ev.title || 'Untitled Event'}</div>
+                <div className="event-card-meta">
+                  {[ev.date, ev.start_time ? `${ev.start_time}${ev.end_time ? ` – ${ev.end_time}` : ''}` : null]
+                    .filter(Boolean).join(' · ')}
+                </div>
+              </div>
+              <span className="event-card-arrow">›</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   if (view === 'error') {
     return (
       <div className="container">
@@ -265,25 +300,28 @@ export default function App() {
   }
 
   // main
+  const ev = events[selectedIndex] ?? {};
   return (
     <div className="container">
       <Header onSettings={() => setView('settings')} />
 
+      {events.length > 1 && (
+        <button className="back-btn" onClick={() => setView('picker')}>
+          ‹ All events ({events.length})
+        </button>
+      )}
+
       <div className="fields">
-        <Field label="Title" value={eventData?.title} />
-        <Field label="Date" value={eventData?.date} />
+        <Field label="Title" value={ev.title} />
+        <Field label="Date" value={ev.date} />
         <Field
           label="Time"
-          value={
-            eventData?.start_time && eventData?.end_time
-              ? `${eventData.start_time} – ${eventData.end_time}`
-              : eventData?.start_time
-          }
+          value={ev.start_time && ev.end_time ? `${ev.start_time} – ${ev.end_time}` : ev.start_time}
         />
-        <Field label="Timezone" value={eventData?.timezone} />
-        <Field label="Location" value={eventData?.location} />
-        <Field label="Meeting URL" value={eventData?.meeting_url} isLink />
-        <Field label="Description" value={eventData?.description} multi />
+        <Field label="Timezone" value={ev.timezone} />
+        <Field label="Location" value={ev.location} />
+        <Field label="Meeting URL" value={ev.meeting_url} isLink />
+        <Field label="Description" value={ev.description} multi />
       </div>
 
       <div className="section">
