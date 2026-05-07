@@ -1,0 +1,339 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  background: #f5f5f7;
+  color: #1a1a1a;
+  min-height: 100vh;
+}
+
+/* ── Page shell ─────────────────────────────────────────────── */
+
+.opt-page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+.opt-loading {
+  padding: 60px;
+  text-align: center;
+  color: #888;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+
+.opt-header {
+  margin-bottom: 32px;
+}
+
+.opt-logo {
+  font-size: 13px;
+  font-weight: 600;
+  color: #5b5ef4;
+  letter-spacing: -0.2px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.opt-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #1a1a1a;
+  letter-spacing: -0.5px;
+  margin-bottom: 6px;
+}
+
+.opt-subtitle {
+  font-size: 13px;
+  color: #777;
+  line-height: 1.5;
+}
+
+/* ── List ───────────────────────────────────────────────────── */
+
+.opt-main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.opt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* ── TypeRow ────────────────────────────────────────────────── */
+
+.opt-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.opt-row:last-child { border-bottom: none; }
+
+.opt-row-info { flex: 1; min-width: 0; }
+
+.opt-row-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.opt-row-alerts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.opt-alert-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: #f0f0f5;
+  border-radius: 20px;
+  font-size: 11px;
+  color: #555;
+}
+
+.opt-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.opt-perm-label {
+  font-size: 11px;
+  color: #aaa;
+  font-style: italic;
+}
+
+/* ── Buttons ────────────────────────────────────────────────── */
+
+.opt-btn {
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid #ddd;
+  background: #fafafa;
+  color: #444;
+  transition: background 0.12s;
+}
+
+.opt-btn:hover { background: #f0f0f0; }
+
+.opt-btn-edit { color: #5b5ef4; border-color: #c0c1f8; }
+.opt-btn-edit:hover { background: #eeeeff; }
+
+.opt-btn-delete { color: #d44; border-color: #f5c0c0; }
+.opt-btn-delete:hover { background: #fff0f0; }
+
+.opt-btn-save {
+  background: #5b5ef4;
+  color: #fff;
+  border-color: #5b5ef4;
+  padding: 7px 18px;
+  font-size: 13px;
+}
+.opt-btn-save:hover { background: #4346d0; border-color: #4346d0; }
+
+.opt-btn-cancel {
+  background: #f3f4f6;
+  color: #555;
+  border-color: #ddd;
+  padding: 7px 14px;
+  font-size: 13px;
+}
+.opt-btn-cancel:hover { background: #e8e9ec; }
+
+/* ── Add type button ────────────────────────────────────────── */
+
+.opt-add-area { padding-top: 4px; }
+
+.opt-add-btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  background: #fff;
+  border: 1.5px dashed #ccc;
+  border-radius: 10px;
+  font-size: 13px;
+  font-family: inherit;
+  font-weight: 600;
+  color: #5b5ef4;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.opt-add-btn:hover { background: #f5f5ff; border-color: #a0a0f0; }
+
+/* ── TypeEditor ─────────────────────────────────────────────── */
+
+.opt-editor {
+  padding: 16px;
+  background: #fafaff;
+  border: 1.5px solid #c0c1f8;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.opt-editor-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.opt-editor-alerts { align-items: flex-start; }
+
+.opt-editor-label {
+  width: 56px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding-top: 8px;
+  flex-shrink: 0;
+}
+
+.opt-editor-input {
+  flex: 1;
+  padding: 7px 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+}
+
+.opt-editor-input:focus {
+  border-color: #5b5ef4;
+  box-shadow: 0 0 0 2px rgba(91, 94, 244, 0.15);
+}
+
+/* ── Alert builder ──────────────────────────────────────────── */
+
+.opt-alert-builder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.opt-alert-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.opt-alert-num {
+  width: 60px;
+  padding: 6px 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  text-align: center;
+  outline: none;
+}
+
+.opt-alert-num:focus { border-color: #5b5ef4; }
+
+.opt-alert-unit {
+  padding: 6px 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  background: #fff;
+  outline: none;
+  cursor: pointer;
+}
+
+.opt-alert-before {
+  font-size: 12px;
+  color: #888;
+}
+
+.opt-alert-remove {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 50%;
+  background: #fee;
+  color: #c44;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s;
+}
+
+.opt-alert-remove:hover:not(:disabled) { background: #fcc; }
+.opt-alert-remove:disabled { opacity: 0.3; cursor: default; }
+
+.opt-add-alert-btn {
+  align-self: flex-start;
+  padding: 4px 10px;
+  background: none;
+  border: 1px dashed #aaa;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: inherit;
+  color: #666;
+  cursor: pointer;
+}
+
+.opt-add-alert-btn:hover { background: #f0f0f0; }
+
+/* ── Editor footer ──────────────────────────────────────────── */
+
+.opt-editor-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.opt-err {
+  font-size: 12px;
+  color: #c44;
+}
+
+/* ── Flash toast ────────────────────────────────────────────── */
+
+.opt-flash {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a1a;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  pointer-events: none;
+  animation: fadeup 0.2s ease;
+}
+
+@keyframes fadeup {
+  from { opacity: 0; transform: translateX(-50%) translateY(6px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
