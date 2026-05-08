@@ -9,63 +9,6 @@ const STANDARD_ALERTS = [
   { label: '1 week before', minutes: 10080 },
 ];
 
-// ── ICS generation ───────────────────────────────────────────────────────────
-
-function toICSDatetime(date, time) {
-  const [Y, M, D] = date.split('-');
-  const [h, m] = time.split(':');
-  return `${Y}${M}${D}T${h}${m}00`;
-}
-
-function uid() {
-  return `${Date.now()}-${Math.random().toString(36).slice(2)}@eventlens`;
-}
-
-function buildICS(event, alertMinutes) {
-  const {
-    title,
-    date,
-    start_time,
-    end_time,
-    timezone = 'America/Los_Angeles',
-    location,
-    meeting_url,
-    description,
-  } = event;
-
-  const dtstart = toICSDatetime(date, start_time);
-  const dtend = toICSDatetime(date, end_time);
-
-  const descParts = [description, meeting_url ? `Meeting URL: ${meeting_url}` : '']
-    .filter(Boolean).join('\\n');
-
-  const alarms = alertMinutes
-    .map(min => `BEGIN:VALARM\r\nTRIGGER:-PT${min}M\r\nACTION:DISPLAY\r\nDESCRIPTION:Reminder\r\nEND:VALARM`)
-    .join('\r\n');
-
-  return [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//Event Lens//EN',
-    'CALSCALE:GREGORIAN',
-    'METHOD:PUBLISH',
-    'BEGIN:VEVENT',
-    `UID:${uid()}`,
-    `DTSTART;TZID=${timezone}:${dtstart}`,
-    `DTEND;TZID=${timezone}:${dtend}`,
-    `SUMMARY:${escICS(title || 'Untitled Event')}`,
-    location ? `LOCATION:${escICS(location)}` : '',
-    descParts ? `DESCRIPTION:${descParts}` : '',
-    alarms,
-    'END:VEVENT',
-    'END:VCALENDAR',
-  ].filter(Boolean).join('\r\n');
-}
-
-function escICS(str) {
-  return str.replace(/[\\;,]/g, m => `\\${m}`).replace(/\n/g, '\\n');
-}
-
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function sendToTab(tabId, msg) {
@@ -111,6 +54,7 @@ export default function App() {
   const [alerts, setAlerts] = useState([60]);
 
   const [errorMsg, setErrorMsg] = useState('');
+  const [addStatus, setAddStatus] = useState(null); // null | 'adding' | 'done'
 
   // ── Boot: load storage then start extraction ─────────────────────────────
 
@@ -248,16 +192,32 @@ export default function App() {
 
   // ── Add to calendar + record recency ─────────────────────────────────────
 
-  function addToCalendar() {
-    const ics = buildICS(events[selectedIndex], alerts);
-    chrome.tabs.create({ url: `data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}` });
+  async function addToCalendar() {
+    setAddStatus('adding');
+    try {
+      const res = await sendToBackground({
+        action: 'addToCalendar',
+        event: events[selectedIndex],
+        alerts,
+      });
+      if (!res.success) throw new Error(res.error);
 
-    // Track recency (permanent "Other" type is excluded)
-    const type = allTypes.find(t => t.id === selectedTypeId);
-    if (type && !type.permanent) {
-      const updated = [selectedTypeId, ...recentIds.filter(id => id !== selectedTypeId)].slice(0, 3);
-      setRecentIds(updated);
-      chrome.storage.local.set({ recentTypeIds: updated });
+      // Track recency (permanent "Other" type is excluded)
+      const type = allTypes.find(t => t.id === selectedTypeId);
+      if (type && !type.permanent) {
+        const updated = [selectedTypeId, ...recentIds.filter(id => id !== selectedTypeId)].slice(0, 3);
+        setRecentIds(updated);
+        chrome.storage.local.set({ recentTypeIds: updated });
+      }
+      setAddStatus('done');
+    } catch (err) {
+      const raw = err.message ?? '';
+      const msg = raw.includes('not found') || raw.includes('Specified native messaging')
+        ? 'Native helper not installed. Run native-host/install.sh on this Mac first.'
+        : raw || 'Unknown error';
+      setErrorMsg(msg);
+      setAddStatus(null);
+      setView('error');
     }
   }
 
@@ -480,8 +440,12 @@ export default function App() {
         </div>
       </div>
 
-      <button className="btn-primary add-btn" onClick={addToCalendar}>
-        Add to Apple Calendar
+      <button
+        className="btn-primary add-btn"
+        onClick={addToCalendar}
+        disabled={addStatus === 'adding' || addStatus === 'done'}
+      >
+        {addStatus === 'adding' ? 'Adding…' : addStatus === 'done' ? 'Added ✓' : 'Add to Apple Calendar'}
       </button>
     </div>
   );
