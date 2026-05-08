@@ -1,11 +1,46 @@
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'extractEvent') {
-    extractEventFromText(message.text, message.apiKey)
+    handleExtraction(message.text, message.apiKey)
       .then(data => sendResponse({ success: true, data }))
       .catch(err => sendResponse({ success: false, error: err.message }));
     return true; // keep channel open for async response
   }
+
+  if (message.action === 'addToCalendar') {
+    chrome.runtime.sendNativeMessage(
+      'com.eventlens.calendar',
+      { action: 'addEvent', event: message.event, alerts: message.alerts },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          sendResponse({ success: false, error: chrome.runtime.lastError.message });
+        } else {
+          sendResponse(response ?? { success: false, error: 'No response from native host' });
+        }
+      }
+    );
+    return true;
+  }
 });
+
+async function handleExtraction(text, apiKey) {
+  const cacheKey = 'cache_' + fnv1a(text);
+  const stored = await chrome.storage.local.get(cacheKey);
+  if (stored[cacheKey]) return stored[cacheKey];
+
+  const data = await extractEventFromText(text, apiKey);
+  chrome.storage.local.set({ [cacheKey]: data });
+  return data;
+}
+
+// FNV-1a 32-bit hash — fast, good distribution, collision risk negligible for email texts
+function fnv1a(str) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = (h * 0x01000193) >>> 0;
+  }
+  return h.toString(36);
+}
 
 async function extractEventFromText(text, apiKey) {
   const response = await fetch('https://api.anthropic.com/v1/messages', {
